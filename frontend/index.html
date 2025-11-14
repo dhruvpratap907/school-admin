@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Management System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1, h2 {
+            color: #4a4a4a;
+            text-align: center;
+        }
+        h1 {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+        #login {
+            text-align: center;
+            background: rgba(255,255,255,0.9);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, button {
+            padding: 12px;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        input:focus, select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+            outline: none;
+        }
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+        th {
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        .hidden {
+            display: none;
+        }
+        .substitute {
+            background-color: #ffeaa7 !important;
+            font-weight: bold;
+        }
+        .dashboard-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 5px solid #667eea;
+        }
+        .dashboard-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #e9ecef;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        li:hover {
+            background: #dee2e6;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .logout-btn {
+            background: #dc3545;
+        }
+        .logout-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>School Management System</h1>
+        
+        <div id="login">
+            <h2>Welcome Back!</h2>
+            <form id="loginForm">
+                <label for="username">Username:</label>
+                <input type="text" id="username" required>
+                
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+                
+                <button type="submit">Login</button>
+            </form>
+        </div>
+        
+        <div id="admin" class="hidden">
+            <h2>Admin Dashboard</h2>
+            <div class="dashboard-section">
+                <h3>Teachers Overview</h3>
+                <table id="teachersTable">
+                    <thead>
+                        <tr>
+                            <th>Teacher</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div class="dashboard-section">
+                <h3>Timetable Management</h3>
+                <label for="selectedTeacher">Select Teacher:</label>
+                <select id="selectedTeacher"></select>
+                
+                <table id="timetableTable">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Period 1</th>
+                            <th>Period 2</th>
+                            <th>Period 3</th>
+                            <th>Period 4</th>
+                            <th>Period 5</th>
+                            <th>Period 6</th>
+                            <th>Period 7</th>
+                            <th>Period 8</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div class="dashboard-section">
+                <h3>Assign Substitute</h3>
+                <label for="subTeacher">Substitute Teacher:</label>
+                <select id="subTeacher"></select>
+                
+                <label for="subDay">Day:</label>
+                <select id="subDay">
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                </select>
+                
+                <label for="subPeriod">Period:</label>
+                <select id="subPeriod">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                </select>
+                <label for="subclass">Class:</label>
+                <select id="subclass">
+                    <option value="I-A">I-A</option>
+                    <option value="II-A">II-A</option>
+                    <option value="III-A">III-A</option>
+                    <option value="IV-A">IV-A</option>
+                    <option value="V-A">V-A</option>
+                    <option value="VI-A">VI-A</option>
+                    <option value="VII-A">VII-A</option>
+                    <option value="VIII-A">VIII-A</option>
+                </select>
+                
+                <button id="assignSub">Assign Substitute</button>
+            </div>
+            
+            <button id="logoutAdmin" class="logout-btn">Logout</button>
+        </div>
+        
+        <div id="teacher" class="hidden">
+            <h2>Teacher Dashboard</h2>
+            <div class="dashboard-section">
+                <h3>Your Timetable</h3>
+                <table id="teacherTimetable">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Period 1</th>
+                            <th>Period 2</th>
+                            <th>Period 3</th>
+                            <th>Period 4</th>
+                            <th>Period 5</th>
+                            <th>Period 6</th>
+                            <th>Period 7</th>
+                            <th>Period 8</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div class="dashboard-section">
+                <h3>Substitute Assignments</h3>
+                <ul id="subAssignments"></ul>
+            </div>
+            
+            <button id="logoutTeacher" class="logout-btn">Logout</button>
+        </div>
+        
+        <!-- Modal for confirmation -->
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <p id="modalText">Are you sure?</p>
+                <button id="confirmYes">Yes</button>
+                <button id="confirmNo">No</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        let teachers = ['Dhruv', 'Nipun', 'Kartikaye', 'Anmolo'];
+        let timetable = {}; // {teacher: {day: {period: subject or 'Free'}}}
+        let substitutes = {}; // {day: {period: subTeacher}}
+
+        // Initialize timetable
+        teachers.forEach(teacher => {
+            timetable[teacher] = {};
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].forEach(day => {
+                timetable[teacher][day] = {};
+                for (let p = 1; p <= 8; p++) {
+                    timetable[teacher][day][p] = 'Subject ' + p; // Default subjects
+                }
+            });
+        });
+
+        // Load from localStorage if available
+        if (localStorage.getItem('timetable')) {
+            timetable = JSON.parse(localStorage.getItem('timetable'));
+        }
+        if (localStorage.getItem('substitutes')) {
+            substitutes = JSON.parse(localStorage.getItem('substitutes'));
+        }
+
+        // Login logic
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin') {
+                showAdmin();
+            } else if (teachers.includes(username) && password === 'teacher') {
+                showTeacher(username);
+            } else {
+                alert('Invalid credentials');
+            }
+        });
+
+        function showAdmin() {
+            document.getElementById('login').classList.add('hidden');
+            document.getElementById('admin').classList.remove('hidden');
+            loadAdminPanel();
+        }
+
+        function showTeacher(teacher) {
+            document.getElementById('login').classList.add('hidden');
+            document.getElementById('teacher').classList.remove('hidden');
+            loadTeacherPanel(teacher);
+        }
+
+        function loadAdminPanel() {
+            // Populate teachers table
+            const tbody = document.querySelector('#teachersTable tbody');
+            tbody.innerHTML = '';
+            teachers.forEach(teacher => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${teacher}</td><td><button onclick="editTeacher('${teacher}')">Edit Timetable</button></td>`;
+                tbody.appendChild(row);
+            });
+            
+            // Populate teacher select
+            const select = document.getElementById('selectedTeacher');
+            select.innerHTML = '';
+            teachers.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher;
+                option.textContent = teacher;
+                select.appendChild(option);
+            });
+            
+            // Populate sub teacher select
+            const subSelect = document.getElementById('subTeacher');
+            subSelect.innerHTML = '';
+            teachers.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher;
+                option.textContent = teacher;
+                subSelect.appendChild(option);
+            });
+            
+            // Load timetable for selected teacher
+            select.addEventListener('change', loadTimetable);
+            loadTimetable();
+            
+            // Assign substitute with confirmation
+            document.getElementById('assignSub').addEventListener('click', () => {
+                showModal('Assign substitute?', assignSubstitute);
+            });
+            
+            // Logout
+            document.getElementById('logoutAdmin').addEventListener('click', logout);
+        }
+
+        function loadTimetable() {
+            const teacher = document.getElementById('selectedTeacher').value;
+            const tbody = document.querySelector('#timetableTable tbody');
+            tbody.innerHTML = '';
+            
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].forEach(day => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${day}</td>`;
+                for (let p = 1; p <= 8; p++) {
+                    const cell = document.createElement('td');
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = timetable[teacher][day][p] || '';
+                    input.addEventListener('change', () => {
+                        timetable[teacher][day][p] = input.value;
+                        saveData();
+                    });
+                    cell.appendChild(input);
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+            });
+        }
+
+        function assignSubstitute() {
+            const subTeacher = document.getElementById('subTeacher').value;
+            const day = document.getElementById('subDay').value;
+            const period = document.getElementById('subPeriod').value;
+            
+            if (!substitutes[day]) substitutes[day] = {};
+            substitutes[day][period] = subTeacher;
+            saveData();
+            alert('Substitute assigned successfully!');
+            loadTeacherPanel(subTeacher); // Refresh if needed, but since it's admin, maybe not
+        }
+
+        function loadTeacherPanel(teacher) {
+            const tbody = document.querySelector('#teacherTimetable tbody');
+            tbody.innerHTML = '';
+            
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].forEach(day => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${day}</td>`;
+                for (let p = 1; p <= 8; p++) {
+                    const cell = document.createElement('td');
+                    let content = timetable[teacher][day][p] || 'Free';
+                    if (substitutes[day] && substitutes[day][p] === teacher) {
+                        content += ' (Substitute)';
+                        cell.classList.add('substitute');
+                    }
+                    cell.textContent = content;
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+            });
+            
+            // Substitute assignments
+            const ul = document.getElementById('subAssignments');
+            ul.innerHTML = '';
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].forEach(day => {
+                for (let p = 1; p <= 8; p++) {
+                    if (substitutes[day] && substitutes[day][p] === teacher) {
+                        const li = document.createElement('li');
+                        li.textContent = `${day} Period ${p}`;
+                        ul.appendChild(li);
+                    }
+                }
+            });
+            
+            // Logout
+            document.getElementById('logoutTeacher').addEventListener('click', logout);
+        }
+
+        function editTeacher(teacher) {
+            document.getElementById('selectedTeacher').value = teacher;
+            loadTimetable();
+        }
+
+        function saveData() {
+            localStorage.setItem('timetable', JSON.stringify(timetable));
+            localStorage.setItem('substitutes', JSON.stringify(substitutes));
+        }
+
+        function logout() {
+            document.getElementById('admin').classList.add('hidden');
+            document.getElementById('teacher').classList.add('hidden');
+            document.getElementById('login').classList.remove('hidden');
+            document.getElementById('loginForm').reset();
+        }
+
+        // Modal functions
+        function showModal(text, yesCallback) {
+            document.getElementById('modalText').textContent = text;
+            document.getElementById('confirmModal').style.display = 'block';
+            document.getElementById('confirmYes').onclick = () => {
+                yesCallback();
+                document.getElementById('confirmModal').style.display = 'none';
+            };
+            document.getElementById('confirmNo').onclick = () => {
+                document.getElementById('confirmModal').style.display = 'none';
+            };
+        }
+
+        document.querySelector('.close').onclick = () => {
+            document.getElementById('confirmModal').style.display = 'none';
+        };
+
+        window.onclick = (event) => {
+            if (event.target == document.getElementById('confirmModal')) {
+                document.getElementById('confirmModal').style.display = 'none';
+            }
+        };
+    </script>
+<script src="script.js"></script>
+
+</body>
+</html>

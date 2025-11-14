@@ -1,0 +1,20 @@
+{
+  "teachers": [
+    {
+      "name": "Dhruv",
+      "username": "dhruv",
+      "password": "teacher"
+    },
+    {
+      "name": "Nipun",
+      "username": "nipun",
+      "password": "teacher"
+    }
+  ],
+  "timetable": {},
+  "substitutes": {
+    "Tuesday": {
+      "8": "dhruv"
+    }
+  }
+}
