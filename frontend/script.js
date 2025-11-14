@@ -1,4 +1,4 @@
-const API = 'http://localhost:5000'; // backend URL
+const API = 'https://school-admin.onrender.com'; // backend URL
 
 let currentUser = null;
 let userRole = null;
