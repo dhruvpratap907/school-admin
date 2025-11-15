@@ -1,4 +1,4 @@
-const API = 'http://school-admin.onrender.com'; // Change to your live URL when deployed
+const API = 'http://school-admin-1.onrender.com'; // Change to your live URL when deployed
 
 let teachers = [];
 let timetable = {};      // {teacher: {day: {period: subject or 'Free'}}}
