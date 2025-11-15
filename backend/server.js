@@ -2,92 +2,84 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs');
-const path = require('path');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Data file
-const DATA_FILE = 'data.json';
+// Load data
 let data = { teachers: [], timetable: {}, substitutes: {} };
+const DATA_FILE = 'data.json';
 
-// Load data from file
 if (fs.existsSync(DATA_FILE)) {
     data = JSON.parse(fs.readFileSync(DATA_FILE));
 }
 
-// Save data to file
+// Save data
 function saveData() {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// -----------------------
-// Routes
-// -----------------------
-
-// Login
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-
-    if (username === 'admin' && password === 'admin') {
-        return res.json({ success: true, role: 'admin' });
-    }
-
-    const teacher = data.teachers.find(t => t.username === username && t.password === password);
-    if (teacher) {
-        return res.json({ success: true, role: 'teacher' });
-    }
-
-    res.json({ success: false, message: 'Invalid credentials' });
-});
+// =====================
+//      API ROUTES
+// =====================
 
 // Get all teachers
 app.get('/teachers', (req, res) => {
-    res.json(data.teachers);
+    res.json({ teachers: data.teachers });
+});
+
+// Add a new teacher
+app.post('/teachers', (req, res) => {
+    const { name } = req.body;
+
+    if (!name) return res.status(400).json({ message: "Teacher name is required" });
+    if (!data.teachers.includes(name)) {
+        data.teachers.push(name);
+        saveData();
+    }
+
+    res.json({ teachers: data.teachers, message: "Teacher added" });
 });
 
 // Get timetable of a teacher
-app.get('/timetable/:username', (req, res) => {
-    const username = req.params.username;
-    res.json(data.timetable[username] || {});
+app.get('/timetable/:teacher', (req, res) => {
+    const teacher = req.params.teacher;
+    const timetable = data.timetable[teacher] || [];
+    res.json({ timetable });
 });
 
-// Update timetable of a teacher
-app.post('/timetable/:username', (req, res) => {
-    const username = req.params.username;
-    data.timetable[username] = req.body;
+// Save timetable
+app.post('/timetable', (req, res) => {
+    const { teacher, timetable } = req.body;
+    data.timetable[teacher] = timetable;
     saveData();
-    res.json({ success: true });
+    res.json({ message: "Timetable saved" });
 });
 
-// Get all substitutes
-app.get('/substitutes', (req, res) => {
-    res.json(data.substitutes);
-});
-
-// Assign a substitute
+// Assign substitute
 app.post('/substitute', (req, res) => {
-    const { teacher, day, period } = req.body;
+    const { absentTeacher, substituteTeacher, day, period, className } = req.body;
 
-    if (!data.substitutes[day]) data.substitutes[day] = {};
-    data.substitutes[day][period] = teacher;
+    if (!data.substitutes[absentTeacher]) {
+        data.substitutes[absentTeacher] = [];
+    }
+
+    data.substitutes[absentTeacher].push({
+        substituteTeacher,
+        day,
+        period,
+        className
+    });
+
     saveData();
-
-    res.json({ success: true });
-});
-
-// Serve frontend
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+    res.json({ message: "Substitute assigned" });
 });
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
 
