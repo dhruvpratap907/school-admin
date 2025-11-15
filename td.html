@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Enterprise Teacher Dashboard</title>
+
+<!-- Icons + Chart.js -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+  :root{
+    --bg1:#0f1724; --panel:#0b1020aa; --glass: rgba(255,255,255,0.06);
+    --accent-1: linear-gradient(90deg,#6a85f1,#b06cfb);
+    --accent-2: #6a85f1;
+    --muted:#9aa4bf; --card:#0b1226;
+    --success:#2ecc71; --danger:#ff6b6b;
+    --glass-2: rgba(255,255,255,0.03);
+  }
+  *{box-sizing:border-box;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0f1b36 100%);color:#dbe6ff}
+  a{color:inherit}
+  /* Layout */
+  .app {display:grid; grid-template-columns: 260px 1fr; gap:20px; height:100vh; padding:18px;}
+  .sidebar{background:var(--panel); border-radius:14px; padding:18px; box-shadow:0 8px 40px rgba(2,6,23,0.6); display:flex;flex-direction:column; gap:18px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo {width:44px;height:44px;border-radius:10px;background:var(--accent-1);display:flex;align-items:center;justify-content:center;font-weight:700}
+  .brand h3{margin:0;font-size:14px;letter-spacing:0.4px}
+  nav{display:flex;flex-direction:column;gap:8px}
+  .nav-item{padding:10px;border-radius:10px;color:var(--muted);display:flex;gap:10px;align-items:center;cursor:pointer}
+  .nav-item:hover{background:var(--glass);color:#fff}
+  .nav-item.active{background:linear-gradient(90deg,#1a2340 0%, #0f1724 100%);color:#fff}
+  .sidebar .quick{margin-top:auto; font-size:13px;color:var(--muted)}
+  /* Top & main */
+  .main {display:flex;flex-direction:column;gap:18px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter: blur(6px);box-shadow: 0 6px 20px rgba(2,6,23,0.5)}
+  .search {display:flex;align-items:center;gap:10px;background:var(--glass);padding:8px 12px;border-radius:10px}
+  .search input{background:transparent;border:0;color:var(--muted);outline:none;width:260px}
+  .controls{display:flex;gap:10px;align-items:center}
+  .btn{background:var(--accent-2);border:0;padding:9px 12px;border-radius:10px;color:white;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+  .avatar{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#ee9ca7,#ffdde1);display:flex;align-items:center;justify-content:center;color:#1b1b1b;font-weight:700}
+  /* Grid content */
+  .grid{display:grid;grid-template-columns: 1.3fr 0.7fr; gap:18px; align-items:start}
+  .card{background:var(--card);padding:16px;border-radius:12px;box-shadow: 0 8px 30px rgba(2,6,23,0.6); min-height:60px}
+  .kpi{display:flex;gap:16px;align-items:center}
+  .kpi .num{font-size:22px;font-weight:700}
+  .kpi .label{color:var(--muted);font-size:13px}
+  .cards-row{display:flex;gap:12px}
+  .card.small{padding:12px}
+  /* Timetable */
+  .timetable-wrap{overflow:auto}
+  table.timetable{width:100%;border-collapse:collapse;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px;overflow:hidden}
+  .timetable th,.timetable td{padding:10px;text-align:center;border-bottom:1px dashed rgba(255,255,255,0.03);font-size:13px}
+  .timetable th{background:linear-gradient(90deg,#0b1226,#0e1630);color:var(--muted);font-weight:600}
+  .cell{min-width:110px; padding:8px;border-radius:8px;margin:4px auto;background:transparent;cursor:grab;user-select:none}
+  .cell.dragging{opacity:0.6;transform:scale(1.02)}
+  .cell.sub{background:linear-gradient(90deg,#fff3c4,#ffd28a);color:#20323b;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,0.25)}
+  .cell.free{color:var(--muted);font-style:italic}
+  /* Activity / right column */
+  .activity{display:flex;flex-direction:column;gap:10px}
+  .feed{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow:auto;padding-right:6px}
+  .feed-item{display:flex;gap:10px;padding:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border-radius:8px}
+  .feed-item .time{font-size:12px;color:var(--muted);margin-left:auto}
+  .chip{padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.02);font-size:13px;color:var(--muted)}
+  /* modal & editor */
+  .modal{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;z-index:60;display:none}
+  .modal.open{display:flex}
+  .modal .panel{background:linear-gradient(180deg,#071229,#0b1830);padding:18px;border-radius:12px;width:420px}
+  .form-row{display:flex;gap:8px;margin-bottom:8px}
+  input,select,textarea{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:#dbe6ff;padding:8px;border-radius:8px;outline:none;width:100%}
+  /* responsive */
+  @media (max-width:980px){.app{grid-template-columns:1fr} .grid{grid-template-columns:1fr} .sidebar{display:none}}
+  /* small touches */
+  .muted{color:var(--muted);font-size:13px}
+  .small{font-size:12px;color:var(--muted)}
+  .row{display:flex;gap:12px;align-items:center}
+  .filter{display:flex;gap:8px;align-items:center}
+</style>
+</head>
+<body>
+  <div class="app" role="application">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" aria-label="Sidebar">
+      <div class="brand">
+        <div class="logo"><i class="fa-solid fa-school"></i></div>
+        <div>
+          <h3>EduSphere</h3>
+          <div class="small muted">Enterprise Teacher Portal</div>
+        </div>
+      </div>
+
+      <nav>
+        <div class="nav-item active" data-section="overview"><i class="fa-solid fa-gauge-high"></i> Overview</div>
+        <div class="nav-item" data-section="timetable"><i class="fa-solid fa-table-list"></i> Timetable</div>
+        <div class="nav-item" data-section="substitute"><i class="fa-solid fa-user-clock"></i> Substitutes</div>
+        <div class="nav-item" data-section="reports"><i class="fa-solid fa-chart-line"></i> Reports</div>
+        <div class="nav-item" data-section="settings"><i class="fa-solid fa-gear"></i> Settings</div>
+      </nav>
+
+      <div class="quick small">Shortcuts: <span class="chip">D</span> Dashboard <span class="chip">T</span> Timetable</div>
+      <div class="quick small">Version: 2.1 • Offline-capable</div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main" id="main">
+      <div class="topbar">
+        <div class="search">
+          <i class="fa-solid fa-magnifying-glass" style="color:var(--muted)"></i>
+          <input id="globalSearch" placeholder="Search classes, periods, substitutes..." aria-label="Search" />
+        </div>
+
+        <div class="controls">
+          <div class="row filter">
+            <select id="filterDay">
+              <option value="All">All days</option>
+              <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+              <option>Thursday</option><option>Friday</option>
+            </select>
+            <select id="filterType">
+              <option value="All">All types</option><option>Subject</option><option>Free</option><option>Substitute</option>
+            </select>
+            <button class="btn ghost" id="exportCsv"><i class="fa-solid fa-file-export"></i> Export</button>
+          </div>
+
+          <div class="row">
+            <div class="avatar" id="avatar">T</div>
+            <div style="text-align:right">
+              <div id="teacherName">Teacher</div>
+              <div class="small muted" id="teacherRole">Mathematics • Grade 7</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRID -->
+      <section class="grid" id="overviewSection">
+        <!-- LEFT: Timetable + KPIs -->
+        <div>
+          <div class="cards-row" style="margin-bottom:12px">
+            <div class="card small" style="flex:1">
+              <div class="kpi">
+                <div>
+                  <div class="muted small">Today&apos;s classes</div>
+                  <div class="num" id="kpiToday">0</div>
+                </div>
+                <div style="margin-left:auto;text-align:right">
+                  <div class="muted small">Sub duties</div>
+                  <div class="num" id="kpiSub">0</div>
+                </div>
+              </div>
+            </div>
+            <div class="card small" style="width:220px">
+              <div class="muted small">Attendance rate</div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="font-weight:700;font-size:18px" id="attRate">—</div>
+                <div class="small muted">this week</div>
+              </div>
+            </div>
+            <div class="card small" style="width:240px">
+              <div class="muted small">Notifications</div>
+              <div class="small" id="notifPreview">No new notifications</div>
+            </div>
+          </div>
+
+          <div class="card timetable-wrap" style="margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="font-weight:700">Weekly Timetable</div>
+              <div class="small muted">Drag & drop to reassign • Double-click cell to edit</div>
+            </div>
+
+            <div style="overflow:auto;">
+              <table class="timetable" id="timetableTable" role="table" aria-label="Timetable">
+                <thead>
+                  <tr>
+                    <th>Day / Period</th>
+                    <th>Period 1</th>
+                    <th>Period 2</th>
+                    <th>Period 3</th>
+                    <th>Period 4</th>
+                    <th>Period 5</th>
+                    <th>Period 6</th>
+                    <th>Period 7</th>
+                    <th>Period 8</th>
+                  </tr>
+                </thead>
+                <tbody id="timetableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" id="chartCard">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="font-weight:700">Class Load (Week)</div>
+              <div class="small muted">Interactive</div>
+            </div>
+            <canvas id="loadChart" height="90"></canvas>
+          </div>
+        </div>
+
+        <!-- RIGHT: Activity feed + substitutes -->
+        <aside class="card activity">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:700">Activity Feed</div>
+            <div class="small muted">real-time</div>
+          </div>
+
+          <div class="feed" id="feed"></div>
+
+          <div style="margin-top:auto">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+              <div style="font-weight:700">Substitutes</div>
+              <div class="small muted">Manage quickly</div>
+            </div>
+
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <select id="subDay" aria-label="Substitute day" style="flex:1">
+                <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                <option>Thursday</option><option>Friday</option>
+              </select>
+              <select id="subPeriod" style="width:92px">
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+              </select>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <select id="subTeacher" style="flex:1"></select>
+              <button class="btn" id="assignBtn"><i class="fa-solid fa-user-plus"></i> Assign</button>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn ghost" id="clearSubs">Clear day</button>
+              <button class="btn ghost" id="undoBtn" title="Undo last change"><i class="fa-solid fa-rotate-left"></i></button>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- Hidden editor modal -->
+      <div class="modal" id="modal">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-weight:700">Edit Cell</div>
+            <div class="small muted" id="modalDay"></div>
+          </div>
+
+          <div class="form-row">
+            <input id="editSubject" placeholder="Subject or 'Free'"/>
+            <select id="editType" style="width:120px;">
+              <option value="subject">Subject</option><option value="free">Free</option><option value="sub">Substitute</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <select id="editTeacher" style="width:100%">
+              <!-- injected teachers -->
+            </select>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn" id="saveEdit">Save</button>
+            <button class="btn ghost" id="cancelEdit">Cancel</button>
+            <button class="btn ghost" id="deleteCell"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+<script>
+/* =========================
+   Data & initialization
+   ========================= */
+const teachers = JSON.parse(localStorage.getItem('teachers')) || ['Dhruv','Nipun','Kartikaye','Anmolo'];
+const timetableStorage = JSON.parse(localStorage.getItem('timetable')) || initDefaultTimetable();
+const substitutesStorage = JSON.parse(localStorage.getItem('substitutes')) || {};
+let undoStack = [];
+
+const currentTeacher = localStorage.getItem('currentTeacher') || teachers[0];
+document.getElementById('teacherName').textContent = currentTeacher;
+document.getElementById('avatar').textContent = currentTeacher[0] || 'T';
+document.getElementById('teacherRole').textContent = 'Faculty • ' + (Math.random()>0.4 ? 'Grade ' + (6 + Math.floor(Math.random()*3)) : 'Subject Lead');
+
+populateTeacherSelect();
+renderAll();
+
+/* default timetable builder */
+function initDefaultTimetable(){
+  const t = {};
+  teachers.forEach(te => { t[te] = {}; ['Monday','Tuesday','Wednesday','Thursday','Friday'].forEach(day => {
+    t[te][day] = {};
+    for(let p=1;p<=8;p++) t[te][day][p] = `Subject ${p}`;
+  })});
+  localStorage.setItem('timetable', JSON.stringify(t));
+  return t;
+}
+
+/* utilities */
+function saveAll(){ localStorage.setItem('timetable', JSON.stringify(timetableStorage)); localStorage.setItem('substitutes', JSON.stringify(substitutesStorage)); }
+function pushUndo(snapshot){ undoStack.push(JSON.stringify(snapshot)); if(undoStack.length>20) undoStack.shift(); }
+function popUndo(){ const s = undoStack.pop(); if(!s) return null; return JSON.parse(s); }
+
+/* ==============
+   Rendering
+   ============== */
+function renderAll(){
+  renderTimetable();
+  renderKPIs();
+  renderFeed();
+  renderSubSelect();
+  drawChart();
+  saveAll();
+}
+
+/* TIMETABLE rendering with drag & drop & editing */
+const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+
+function renderTimetable(){
+  const tbody = document.getElementById('timetableBody');
+  tbody.innerHTML = '';
+  const filterDay = document.getElementById('filterDay').value;
+  const filterType = document.getElementById('filterType').value;
+  const query = document.getElementById('globalSearch').value.trim().toLowerCase();
+
+  days.forEach(day=>{
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.textContent = day;
+    tr.appendChild(th);
+    for(let p=1;p<=8;p++){
+      const td = document.createElement('td');
+      const subj = timetableStorage[currentTeacher]?.[day]?.[p] || 'Free';
+      const cell = document.createElement('div');
+      cell.className = 'cell ' + (substitutesStorage[day] && substitutesStorage[day][p] === currentTeacher ? 'sub' : (subj==='Free'?'free':'' ));
+      cell.draggable = true;
+      cell.dataset.day = day;
+      cell.dataset.period = p;
+      cell.dataset.subject = subj;
+      cell.textContent = subj;
+      // filtering
+      if(filterDay !== 'All' && filterDay !== day) { cell.style.display='none'; }
+      if(filterType !== 'All'){
+        if(filterType === 'Subject' && subj==='Free') cell.style.display='none';
+        if(filterType === 'Free' && subj!=='Free') cell.style.display='none';
+        if(filterType === 'Substitute' && !(substitutesStorage[day] && substitutesStorage[day][p] === currentTeacher)) cell.style.display='none';
+      }
+      if(query){
+        if(!(`${day} ${p} ${subj}`.toLowerCase().includes(query))) cell.style.display='none';
+      }
+
+      // events
+      cell.addEventListener('dblclick', ()=> openEditor(day,p,subj));
+      cell.addEventListener('dragstart', dragStart);
+      cell.addEventListener('dragend', dragEnd);
+      cell.addEventListener('dragover', e=>e.preventDefault());
+      cell.addEventListener('drop', handleDrop);
+
+      td.appendChild(cell);
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+/* Drag & Drop handlers allow swapping content */
+let draggingData = null;
+function dragStart(e){
+  e.dataTransfer.setData('text/plain','dragging');
+  this.classList.add('dragging');
+  draggingData = {day:this.dataset.day, period:this.dataset.period, subject:this.dataset.subject};
+}
+function dragEnd(e){
+  this.classList.remove('dragging');
+  draggingData = null;
+}
+function handleDrop(e){
+  e.preventDefault();
+  const targetDay = this.dataset.day;
+  const targetPeriod = this.dataset.period;
+  if(!draggingData) return;
+  // save undo
+  pushUndo({timetable: JSON.parse(JSON.stringify(timetableStorage)), substitutes: JSON.parse(JSON.stringify(substitutesStorage))});
+  // swap subjects between source and target for current teacher only
+  const srcDay = draggingData.day, srcPeriod = draggingData.period;
+  const srcVal = timetableStorage[currentTeacher][srcDay][srcPeriod];
+  const dstVal = timetableStorage[currentTeacher][targetDay][targetPeriod];
+  timetableStorage[currentTeacher][targetDay][targetPeriod] = srcVal;
+  timetableStorage[currentTeacher][srcDay][srcPeriod] = dstVal;
+  renderAll();
+  pushFeed(`Swapped ${srcDay} P${srcPeriod} with ${targetDay} P${targetPeriod}`);
+}
+
+/* Editor modal */
+const modal = document.getElementById('modal');
+const editSubject = document.getElementById('editSubject');
+const editTeacher = document.getElementById('editTeacher');
+document.getElementById('saveEdit').addEventListener('click', ()=> {
+  const day = modal.dataset.day, period = modal.dataset.period;
+  const value = editSubject.value.trim() || 'Free';
+  pushUndo({timetable: JSON.parse(JSON.stringify(timetableStorage)), substitutes: JSON.parse(JSON.stringify(substitutesStorage))});
+  timetableStorage[currentTeacher][day][period] = value;
+  // if type is substitute, mark substitute map
+  if(document.getElementById('editType').value === 'sub'){
+    substitutesStorage[day] = substitutesStorage[day] || {};
+    substitutesStorage[day][period] = editTeacher.value;
+  } else {
+    if(substitutesStorage[day]) delete substitutesStorage[day][period];
+  }
+  closeModal();
+  renderAll();
+  pushFeed(`Edited ${day} Period ${period} → ${value}`);
+});
+document.getElementById('cancelEdit').addEventListener('click', ()=> closeModal());
+document.getElementById('deleteCell').addEventListener('click', ()=>{
+  const day = modal.dataset.day, period = modal.dataset.period;
+  pushUndo({timetable: JSON.parse(JSON.stringify(timetableStorage)), substitutes: JSON.parse(JSON.stringify(substitutesStorage))});
+  timetableStorage[currentTeacher][day][period] = 'Free';
+  if(substitutesStorage[day]) delete substitutesStorage[day][period];
+  closeModal(); renderAll(); pushFeed(`Cleared ${day} P${period}`);
+});
+function openEditor(day, period, subject){
+  modal.classList.add('open'); modal.style.display='flex';
+  modal.dataset.day = day; modal.dataset.period = period;
+  document.getElementById('modalDay').textContent = `${day} · P${period}`;
+  editSubject.value = subject === 'Free' ? '' : subject;
+  document.getElementById('editType').value = (substitutesStorage[day] && substitutesStorage[day][period]) ? 'sub' : (subject==='Free'?'free':'subject');
+  editTeacher.value = currentTeacher;
+}
+function closeModal(){ modal.classList.remove('open'); modal.style.display='none'; }
+
+/* Feed */
+function pushFeed(text){
+  const feed = document.getElementById('feed');
+  const item = document.createElement('div'); item.className='feed-item';
+  item.innerHTML = `<div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(90deg,#6a85f1,#b06cfb);display:flex;align-items:center;justify-content:center">${currentTeacher[0]}</div>
+    <div style="flex:1"><div style="font-weight:700">${text}</div><div class="small muted">${new Date().toLocaleString()}</div></div>
+    <div class="time">${(new Date()).toLocaleTimeString()}</div>`;
+  feed.prepend(item);
+  // cap feed length
+  while(feed.children.length>50) feed.removeChild(feed.lastChild);
+}
+
+/* Substitutes UI */
+function renderSubSelect(){
+  const sel = document.getElementById('subTeacher'); sel.innerHTML='';
+  teachers.forEach(t => { const o = document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
+}
+document.getElementById('assignBtn').addEventListener('click', ()=>{
+  const day = document.getElementById('subDay').value;
+  const period = document.getElementById('subPeriod').value;
+  const teacher = document.getElementById('subTeacher').value;
+  pushUndo({timetable: JSON.parse(JSON.stringify(timetableStorage)), substitutes: JSON.parse(JSON.stringify(substitutesStorage))});
+  substitutesStorage[day] = substitutesStorage[day] || {};
+  substitutesStorage[day][period] = teacher;
+  saveAll(); renderAll(); pushFeed(`Assigned ${teacher} as substitute on ${day} P${period}`);
+  alert('Substitute assigned');
+});
+document.getElementById('clearSubs').addEventListener('click', ()=>{
+  const day = document.getElementById('subDay').value;
+  if(confirm(`Clear substitutes for ${day}?`)){
+    pushUndo({timetable: JSON.parse(JSON.stringify(timetableStorage)), substitutes: JSON.parse(JSON.stringify(substitutesStorage))});
+    substitutesStorage[day] = {}; saveAll(); renderAll(); pushFeed(`Cleared substitutes for ${day}`);
+  }
+});
+document.getElementById('undoBtn').addEventListener('click', ()=>{
+  const snapshot = popUndo();
+  if(snapshot){
+    Object.assign(timetableStorage, snapshot.timetable);
+    Object.assign(substitutesStorage, snapshot.substitutes);
+    saveAll(); renderAll(); pushFeed('Undo performed');
+  } else alert('Nothing to undo');
+});
+
+/* KPIs & Chart */
+function renderKPIs(){
+  let today = new Date().toLocaleString('en-US',{weekday:'long'});
+  let todayCount=0, subCount=0;
+  days.forEach(day=>{
+    for(let p=1;p<=8;p++){
+      if((timetableStorage[currentTeacher]||{})[day][p] && timetableStorage[currentTeacher][day][p] !== 'Free') {
+        if(day===today) todayCount++;
+      }
+      if(substitutesStorage[day] && substitutesStorage[day][p] === currentTeacher) subCount++;
+    }
+  });
+  document.getElementById('kpiToday').textContent = todayCount;
+  document.getElementById('kpiSub').textContent = subCount;
+  document.getElementById('kpiSub').style.color = subCount ? 'var(--success)' : 'var(--muted)';
+  document.getElementById('attRate').textContent = `${85 + Math.floor(Math.random()*15)}%`; // demo
+  // notifications preview
+  document.getElementById('notifPreview').textContent = subCount ? `${subCount} pending substitute(s)` : 'All clear';
+}
+
+/* Chart with Chart.js */
+let chart;
+function drawChart(){
+  const ctx = document.getElementById('loadChart').getContext('2d');
+  const labels = days;
+  const data = labels.map(d => {
+    let count = 0;
+    for(let p=1;p<=8;p++) if((timetableStorage[currentTeacher]||{})[d][p] && timetableStorage[currentTeacher][d][p] !== 'Free') count++;
+    return count;
+  });
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type:'bar',
+    data:{labels, datasets:[{label:'Periods per day', data, borderRadius:8, backgroundColor: 'rgba(106,133,241,0.9)'}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.03)'}}}}
+  });
+}
+
+/* Feed starter */
+function renderFeed(){
+  document.getElementById('feed').innerHTML='';
+  pushFeed('Welcome back, ' + currentTeacher + ' — dashboard ready');
+}
+
+/* Export CSV */
+document.getElementById('exportCsv').addEventListener('click', ()=>{
+  const rows = [];
+  rows.push(['Teacher','Day','Period','Subject','IsSubstitute','SubTeacher']);
+  teachers.forEach(t => {
+    days.forEach(day=>{
+      for(let p=1;p<=8;p++){
+        const subj = (timetableStorage[t]||{})[day][p] || 'Free';
+        const isSub = substitutesStorage[day] && substitutesStorage[day][p] ? 'Yes' : 'No';
+        const subTeacher = (substitutesStorage[day]||{})[p] || '';
+        rows.push([t,day,p,subj,isSub, subTeacher]);
+      }
+    });
+  });
+  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `timetable_export_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+});
+
+/* Filters and search */
+document.getElementById('globalSearch').addEventListener('input', renderTimetable);
+document.getElementById('filterDay').addEventListener('change', renderTimetable);
+document.getElementById('filterType').addEventListener('change', renderTimetable);
+
+/* keyboard shortcuts */
+document.addEventListener('keydown', (e)=>{
+  if(e.key.toLowerCase() === 'd'){ document.querySelector('[data-section="overview"]').click(); }
+  if(e.key.toLowerCase() === 't'){ document.querySelector('[data-section="timetable"]').click(); }
+});
+
+/* Navigation (simple section switcher) */
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    el.classList.add('active');
+    const section = el.dataset.section;
+    // we keep a single-page UI — show/hide blocks for more sections (not implemented fully to keep file concise)
+    if(section === 'overview'){ document.getElementById('overviewSection').style.display = 'grid'; }
+    else if(section === 'timetable'){ document.getElementById('overviewSection').style.display = 'grid'; }
+    else { document.getElementById('overviewSection').style.display = 'grid'; }
+  });
+});
+
+/* populate teacher dropdown for editor */
+function populateTeacherSelect(){
+  const sel = document.getElementById('editTeacher');
+  sel.innerHTML = '';
+  teachers.forEach(t=>{ const o = document.createElement('option'); o.value = t; o.text = t; sel.add(o);});
+}
+
+/* Substitutes list auto-highlight in timetable cells */
+function applySubstitutes(){
+  // applied in renderTimetable via class assignment
+}
+
+/* small helpers */
+function renderSubSelect(){ renderSubSelect = renderSubSelect; } // avoid lint
+
+/* initial render and save */
+renderAll();
+
+/* expose some for debugging in console */
+window._ed = {timetableStorage,substitutesStorage,pushFeed,renderAll};
+</script>
+</body>
+</html>
+

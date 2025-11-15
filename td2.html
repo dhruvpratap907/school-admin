@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Dashboard</title>
+
+<!-- Icon Library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+    body {
+        margin: 0;
+        padding: 25px;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(135deg, #6a85f1 0%, #764ba2 100%);
+        color: #333;
+    }
+
+    /* Main Container */
+    .container {
+        max-width: 1250px;
+        margin: auto;
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(12px);
+        padding: 35px;
+        border-radius: 18px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        animation: fadeIn .5s ease;
+    }
+
+    @keyframes fadeIn {
+        from {opacity: 0; transform: translateY(10px);}
+        to {opacity: 1; transform: translateY(0);}
+    }
+
+    /* Title */
+    h1 {
+        text-align: center;
+        font-size: 38px;
+        font-weight: bold;
+        background: linear-gradient(45deg, #6a85f1, #d775ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 30px;
+    }
+
+    /* Dashboard cards */
+    .cards {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .card {
+        flex: 1;
+        min-width: 230px;
+        background: rgba(255, 255, 255, 0.6);
+        padding: 20px;
+        border-radius: 14px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        transition: .3s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 28px rgba(0,0,0,0.2);
+    }
+
+    .card i {
+        font-size: 45px;
+        margin-bottom: 10px;
+        color: #6a85f1;
+    }
+
+    .card-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .dashboard-section {
+        background: rgba(255,255,255,0.6);
+        padding: 25px;
+        border-radius: 15px;
+        border-left: 6px solid #6a85f1;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .dashboard-section h2 {
+        color: #6a63e5;
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    /* Timetable Table */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+        background: #fff;
+    }
+
+    th {
+        background: linear-gradient(45deg, #6a85f1, #a46cff);
+        color: white;
+        padding: 12px;
+        font-size: 15px;
+    }
+
+    td {
+        padding: 13px;
+        border: 1px solid #eee;
+        text-align: center;
+        font-size: 14.5px;
+        transition: 0.25s;
+    }
+
+    tr:hover td {
+        background: #f4f4ff;
+    }
+
+    .substitute {
+        background: #ffeaa7 !important;
+        font-weight: bold;
+        color: #444;
+        border-left: 4px solid #ff9f1a;
+    }
+
+    #subList li {
+        background: #ececec;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+
+    /* Logout Button */
+    .logout-btn {
+        width: 100%;
+        padding: 15px;
+        margin-top: 10px;
+        background: #ff4b5c;
+        border: none;
+        color: white;
+        font-size: 18px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: .3s;
+        box-shadow: 0 4px 20px rgba(255,0,0,0.2);
+    }
+
+    .logout-btn:hover {
+        background: #e63b4a;
+        transform: translateY(-3px);
+    }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    
+    <h1><i class="fa-solid fa-chalkboard-user"></i> Teacher Dashboard</h1>
+
+    <!-- Top Cards -->
+    <div class="cards">
+        <div class="card">
+            <i class="fa-solid fa-calendar-days"></i>
+            <div class="card-title">Total Classes Today</div>
+            <div id="todayCount">0</div>
+        </div>
+        <div class="card">
+            <i class="fa-solid fa-user-check"></i>
+            <div class="card-title">Substitute Duties</div>
+            <div id="subCount">0</div>
+        </div>
+        <div class="card">
+            <i class="fa-solid fa-bell"></i>
+            <div class="card-title">Announcements</div>
+            <div>3 New</div>
+        </div>
+    </div>
+
+    <!-- Timetable Section -->
+    <div class="dashboard-section">
+        <h2>📘 Your Weekly Timetable</h2>
+
+        <table id="teacherTable">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Period 1</th>
+                    <th>Period 2</th>
+                    <th>Period 3</th>
+                    <th>Period 4</th>
+                    <th>Period 5</th>
+                    <th>Period 6</th>
+                    <th>Period 7</th>
+                    <th>Period 8</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Substitute Section -->
+    <div class="dashboard-section">
+        <h2>🟨 Your Substitute Assignments</h2>
+        <ul id="subList"></ul>
+    </div>
+
+    <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+
+</div>
+
+<script>
+    let timetable = JSON.parse(localStorage.getItem('timetable')) || {};
+    let substitutes = JSON.parse(localStorage.getItem('substitutes')) || {};
+    let teacher = localStorage.getItem("currentTeacher");
+
+    const days = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+
+    function loadTeacherTimetable() {
+        const tbody = document.querySelector("#teacherTable tbody");
+        tbody.innerHTML = "";
+
+        let today = new Date().toLocaleString('en-US',{weekday:'long'});
+        let classCountToday = 0;
+
+        days.forEach(day => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${day}</td>`;
+
+            for (let p = 1; p <= 8; p++) {
+                let cell = document.createElement("td");
+                let subject = timetable[teacher]?.[day]?.[p] || "Free";
+
+                if (substitutes[day] && substitutes[day][p] === teacher) {
+                    cell.textContent = subject + " (Sub)";
+                    cell.classList.add("substitute");
+                } else {
+                    cell.textContent = subject;
+                }
+
+                if (day === today && subject !== "Free") classCountToday++;
+
+                tr.appendChild(cell);
+            }
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById("todayCount").textContent = classCountToday;
+    }
+
+    function loadSubList() {
+        const ul = document.getElementById("subList");
+        ul.innerHTML = "";
+
+        let count = 0;
+
+        days.forEach(day => {
+            for (let p = 1; p <= 8; p++) {
+                if (substitutes[day] && substitutes[day][p] === teacher) {
+                    let li = document.createElement("li");
+                    li.innerHTML = `<i class="fa-solid fa-user-clock"></i> ${day} – Period ${p}`;
+                    ul.appendChild(li);
+                    count++;
+                }
+            }
+        });
+
+        document.getElementById("subCount").textContent = count;
+    }
+
+    function logout() {
+        localStorage.removeItem("currentTeacher");
+        window.location.href = "index.html";
+    }
+
+    loadTeacherTimetable();
+    loadSubList();
+</script>
+
+</body>
+</html>
