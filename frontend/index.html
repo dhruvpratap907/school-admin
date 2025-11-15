@@ -348,9 +348,8 @@
             if (username === 'admin' && password === 'admin') {
                 showAdmin();
             } else if (teachers.includes(username) && password === 'teacher') {
-    localStorage.setItem('currentTeacher', username); // pass teacher name
-    window.location.href = "td.html";   // redirect to teacher dashboard
-}
+         showTeacher(username);
+        }
 
         });
 
